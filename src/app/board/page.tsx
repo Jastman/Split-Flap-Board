@@ -86,14 +86,16 @@ export default function BoardPage() {
         }}
       />
 
-      <SplitFlapBoard
-        targetRows={targetRows}
-        accentCols={state?.accentCols ?? []}
-        config={config}
-        feedName={state?.feedName}
-        feedIcon={state?.feedIcon}
-        onWaveStart={handleWaveStart}
-      />
+      {state && (
+        <SplitFlapBoard
+          targetRows={targetRows}
+          accentCols={state.accentCols}
+          config={config}
+          feedName={state.feedName}
+          feedIcon={state.feedIcon}
+          onWaveStart={handleWaveStart}
+        />
+      )}
 
       {/* Sound hint */}
       {showClickHint && (
