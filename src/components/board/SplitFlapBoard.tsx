@@ -85,7 +85,10 @@ export default function SplitFlapBoard({
   return (
     <div
       style={{
-        transform: `scale(${scale})`,
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
         transformOrigin: 'center center',
         display: 'inline-flex',
         flexDirection: 'column',
@@ -93,7 +96,6 @@ export default function SplitFlapBoard({
         padding: '12px',
         borderRadius: '6px',
         boxShadow: '0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.3)',
-        position: 'relative',
         gap: '2px',
       }}
     >
