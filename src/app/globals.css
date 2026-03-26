@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --board-bg: #1a1a1a;
+  --cell-bg: #111111;
+  --char-color: #f5f0e8;
+  --accent-color: #e85d04;
+  --cell-width: 2.4rem;
+  --cell-height: 4rem;
+  --flip-duration: 80ms;
+  --wave-delay: 40ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+  color: #f5f0e8;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
