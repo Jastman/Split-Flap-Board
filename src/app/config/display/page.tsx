@@ -4,6 +4,14 @@ import { useEffect, useState, useCallback } from 'react';
 import type { AppConfig } from '@/types/config';
 import { BOARD_PRESETS } from '@/types/config';
 
+async function resolveTimezone(lat: number, lon: number): Promise<string> {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to resolve timezone');
+  const data = await res.json();
+  return (data.timezone as string) ?? 'UTC';
+}
+
 function Slider({
   label, value, min, max, step = 1,
   onChange,
@@ -66,6 +74,39 @@ export default function DisplayPage() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+
+  const useMyLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      setLocError('Geolocation not supported by this browser');
+      return;
+    }
+    setLocating(true);
+    setLocError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = parseFloat(pos.coords.latitude.toFixed(4));
+          const lon = parseFloat(pos.coords.longitude.toFixed(4));
+          const timezone = await resolveTimezone(lat, lon);
+          setConfig((prev) => prev ? { ...prev, latitude: lat, longitude: lon, timezone } : prev);
+        } catch {
+          setLocError('Could not resolve timezone — coordinates saved, set timezone manually');
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        setLocError(
+          err.code === 1 ? 'Location permission denied — allow it in your browser settings' :
+          err.code === 2 ? 'Location unavailable' : 'Location request timed out',
+        );
+      },
+      { timeout: 10000, maximumAge: 300000 },
+    );
+  }, []);
 
   useEffect(() => {
     fetch('/api/config').then((r) => r.json()).then(setConfig);
@@ -241,16 +282,35 @@ export default function DisplayPage() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.1em', display: 'block', marginBottom: '0.25rem' }}>
-              LOCATION (for weather, flights, ISS)
-            </label>
-          </div>
         </div>
       </div>
 
       {/* Location */}
-      <h2 style={{ fontSize: '0.8rem', color: '#666', letterSpacing: '0.12em', marginBottom: '1rem' }}>LOCATION</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '0.8rem', color: '#666', letterSpacing: '0.12em', margin: 0 }}>LOCATION</h2>
+        <button
+          onClick={useMyLocation}
+          disabled={locating}
+          style={{
+            background: locating ? '#222' : '#1a3a1a',
+            border: `1px solid ${locating ? '#333' : '#2a5a2a'}`,
+            color: locating ? '#555' : '#44cc44',
+            padding: '0.25rem 0.75rem',
+            borderRadius: '3px',
+            cursor: locating ? 'default' : 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '0.7rem',
+            letterSpacing: '0.08em',
+          }}
+        >
+          {locating ? 'LOCATING...' : '⊕ USE MY LOCATION'}
+        </button>
+        {locError && (
+          <span style={{ fontSize: '0.7rem', color: '#cc4444', fontFamily: 'monospace' }}>
+            {locError}
+          </span>
+        )}
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
         {[
           { label: 'LATITUDE', key: 'latitude', type: 'number' },

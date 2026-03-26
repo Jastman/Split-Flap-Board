@@ -13,6 +13,17 @@ export default function BoardPage() {
   );
   const [showClickHint, setShowClickHint] = useState(true);
   const [prevRevision, setPrevRevision] = useState(-1);
+  const [showLocPrompt, setShowLocPrompt] = useState(false);
+
+  // Show location prompt if still on default NYC coords
+  useEffect(() => {
+    if (config.latitude === 40.7128 && config.longitude === -74.006) {
+      const timer = setTimeout(() => setShowLocPrompt(true), 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowLocPrompt(false);
+    }
+  }, [config.latitude, config.longitude]);
 
   // Hide click hint once audio is ready
   useEffect(() => {
@@ -100,6 +111,54 @@ export default function BoardPage() {
           }}
         >
           CLICK ANYWHERE TO ENABLE SOUND
+        </div>
+      )}
+
+      {/* Location prompt */}
+      {showLocPrompt && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            background: 'rgba(20,20,20,0.92)',
+            border: '1px solid rgba(232,93,4,0.4)',
+            borderRadius: '4px',
+            padding: '0.6rem 1rem',
+            zIndex: 100,
+          }}
+        >
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+            USING DEFAULT LOCATION (NEW YORK)
+          </span>
+          <a
+            href="/config/display"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#e85d04',
+              color: '#fff',
+              fontSize: '0.65rem',
+              fontFamily: 'monospace',
+              padding: '0.2rem 0.6rem',
+              borderRadius: '3px',
+              textDecoration: 'none',
+              letterSpacing: '0.08em',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            SET MY LOCATION →
+          </a>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowLocPrompt(false); }}
+            style={{
+              background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)',
+              cursor: 'pointer', fontSize: '0.8rem', padding: '0 0.25rem',
+            }}
+          >✕</button>
         </div>
       )}
 
