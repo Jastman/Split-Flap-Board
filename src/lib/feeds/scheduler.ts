@@ -47,8 +47,8 @@ function getConfig(): AppConfig {
     latitude: (row.latitude as number) ?? 40.7128,
     longitude: (row.longitude as number) ?? -74.006,
     timezone: (row.timezone as string) ?? 'America/New_York',
-    cols: (row.cols as number) ?? 26,
-    rows: (row.rows as number) ?? 3,
+    cols: (row.cols as number) ?? 32,
+    rows: (row.rows as number) ?? 4,
     fontSize: (row.font_size as number) ?? 1.0,
     flipSpeed: (row.flip_speed as number) ?? 80,
     waveDelay: (row.wave_delay as number) ?? 40,
@@ -120,7 +120,6 @@ async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<Fee
 }
 
 async function getResultForFeed(feedRow: FeedRow, config: AppConfig): Promise<FeedResult | null> {
-  // Check cache first
   const cached = getCachedFeed(feedRow.id);
   if (cached) return cached;
 
@@ -130,7 +129,6 @@ async function getResultForFeed(feedRow: FeedRow, config: AppConfig): Promise<Fe
     return result;
   }
 
-  // Fall back to stale cache on error
   return getStaleCache(feedRow.id);
 }
 
@@ -147,27 +145,29 @@ export async function getCurrentBoardState(): Promise<{
     .all() as ScheduleSlot[];
 
   if (slots.length === 0) {
-    // Fallback: show quote
-    const { fetchQuote: fq } = await import('./quotes');
-    return {
-      result: fq([], config.cols),
-      revision,
-      config,
-    };
+    const fallback = fetchQuote([], config.cols);
+    if (slotStartedAt === 0) { slotStartedAt = Date.now(); revision++; }
+    return { result: fallback, revision, config };
   }
 
   const now = Date.now();
   const elapsed = now - slotStartedAt;
+  const currentDuration = slots[currentSlotIndex % slots.length].duration * 1000;
 
-  // Advance slot if duration expired, trying up to slots.length times to find a relevant feed
-  let attempts = 0;
-  while (attempts < slots.length) {
+  // Still within the current slot's duration — return unchanged (client deduplicates on revision)
+  if (slotStartedAt > 0 && elapsed < currentDuration) {
+    return { result: fetchQuote([], config.cols), revision, config };
+  }
+
+  // Duration expired (or first run). Advance to the next slot if not the first run.
+  if (slotStartedAt > 0) {
+    currentSlotIndex = (currentSlotIndex + 1) % slots.length;
+  }
+
+  // Find the next relevant slot, trying each in order
+  for (let attempts = 0; attempts < slots.length; attempts++) {
     const slot = slots[currentSlotIndex % slots.length];
-    const slotDuration = slot.duration * 1000;
 
-    if (slotStartedAt > 0 && elapsed < slotDuration) break;
-
-    // Try to get result for this slot
     if (slot.feed_id) {
       const feedRow = db
         .prepare('SELECT * FROM feeds WHERE id = ? AND enabled = 1')
@@ -176,10 +176,8 @@ export async function getCurrentBoardState(): Promise<{
       if (feedRow) {
         const result = await getResultForFeed(feedRow, config);
         if (result?.isRelevant) {
-          if (elapsed >= slotDuration || slotStartedAt === 0) {
-            slotStartedAt = now;
-            revision++;
-          }
+          slotStartedAt = now;
+          revision++;
           return { result, revision, config };
         }
       }
@@ -200,25 +198,20 @@ export async function getCurrentBoardState(): Promise<{
           validUntil: Date.now() + slot.duration * 1000,
           isRelevant: true,
         };
-        if (elapsed >= slotDuration || slotStartedAt === 0) {
-          slotStartedAt = now;
-          revision++;
-        }
+        slotStartedAt = now;
+        revision++;
         return { result, revision, config };
       }
     }
 
-    // Slot not relevant, advance
+    // Not relevant or not found — try next slot
     currentSlotIndex = (currentSlotIndex + 1) % slots.length;
     attempts++;
   }
 
-  // All slots exhausted without relevance — show quote as fallback
-  const { fetchQuote: fq } = await import('./quotes');
-  const fallback = fq([], config.cols);
-  if (slotStartedAt === 0) {
-    slotStartedAt = now;
-    revision++;
-  }
+  // All slots exhausted — fallback to quote
+  const fallback = fetchQuote([], config.cols);
+  slotStartedAt = now;
+  revision++;
   return { result: fallback, revision, config };
 }

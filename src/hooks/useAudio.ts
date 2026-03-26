@@ -38,16 +38,18 @@ export function useAudio(initialEnabled = true, initialVolume = 0.7): UseAudioRe
 
   useEffect(() => {
     const onInteraction = () => {
+      if (!ctxRef.current) initContext();
       resumeContext();
       setIsReady(true);
     };
-    document.addEventListener('click', onInteraction, { once: true });
-    document.addEventListener('keydown', onInteraction, { once: true });
+    // Use capture:true so this fires even when child elements call stopPropagation()
+    document.addEventListener('click', onInteraction, { once: true, capture: true });
+    document.addEventListener('keydown', onInteraction, { once: true, capture: true });
     return () => {
-      document.removeEventListener('click', onInteraction);
-      document.removeEventListener('keydown', onInteraction);
+      document.removeEventListener('click', onInteraction, { capture: true });
+      document.removeEventListener('keydown', onInteraction, { capture: true });
     };
-  }, [resumeContext]);
+  }, [resumeContext, initContext]);
 
   const synthesizeClick = useCallback((ctx: AudioContext, master: GainNode, time: number) => {
     const bufferSize = Math.floor(ctx.sampleRate * 0.003);
@@ -95,12 +97,18 @@ export function useAudio(initialEnabled = true, initialVolume = 0.7): UseAudioRe
       const ctx = ctxRef.current;
       const master = masterGainRef.current;
       if (!ctx || !master) return;
-      if (ctx.state === 'suspended') return;
 
-      const now = ctx.currentTime;
-      for (let col = 0; col < cols; col++) {
-        const t = now + (col * waveDelayMs) / 1000;
-        synthesizeClick(ctx, master, t);
+      const play = () => {
+        const now = ctx.currentTime;
+        for (let col = 0; col < cols; col++) {
+          synthesizeClick(ctx, master, now + (col * waveDelayMs) / 1000);
+        }
+      };
+
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(play).catch(() => {/* browser denied resume */});
+      } else {
+        play();
       }
     },
     [isEnabled, synthesizeClick],
