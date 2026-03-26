@@ -23,7 +23,27 @@ Open-source, self-hostable, no subscriptions, no API keys required for core feat
 - PWA — install on any TV browser, works offline with last cached state
 - MIT license
 
-## Quick Start
+## Deploy
+
+### Railway (free, one-click)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Jastman/Split-Flap-Board)
+
+Or manually:
+
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+2. Select this repository — Railway will auto-detect the `Dockerfile`
+3. Add a **Volume** and set the mount path to `/data`
+4. Set the environment variable `SQLITE_PATH=/data/flipflap.db`
+5. Deploy — your board will be live at the Railway-generated URL in ~2 minutes
+
+### Docker (recommended for TV / home server)
+
+```bash
+docker compose up --build
+```
+
+The app will be available at `http://localhost:3000`. Data is persisted in a named Docker volume.
 
 ### Development
 
@@ -38,18 +58,6 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to the board.
 
 Settings are at [http://localhost:3000/config](http://localhost:3000/config).
-
-### Docker (recommended for TV deployment)
-
-```bash
-docker compose up --build
-```
-
-The app will be available at `http://localhost:3000`. Data is persisted in a named Docker volume.
-
-### One-click deploy
-
-Copy `.env.example` to `.env` and set `SQLITE_PATH` if needed.
 
 ## Configuration
 
