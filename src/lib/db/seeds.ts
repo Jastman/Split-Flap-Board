@@ -73,6 +73,33 @@ export const DEFAULT_FEEDS: FeedConfig[] = [
     cacheTtl: 0,
     priority: 1,
   },
+  {
+    id: 'sports',
+    type: 'sports',
+    label: 'MLB Scores',
+    enabled: true,
+    config: { sport: 'baseball', league: 'mlb' },
+    cacheTtl: 300,
+    priority: 8,
+  },
+  {
+    id: 'stocks',
+    type: 'stocks',
+    label: 'Stocks',
+    enabled: false,
+    config: { symbols: ['SPY', 'QQQ', 'AAPL', 'TSLA'] },
+    cacheTtl: 300,
+    priority: 5,
+  },
+  {
+    id: 'countdown',
+    type: 'countdown',
+    label: 'Countdown',
+    enabled: false,
+    config: { label: 'NEW YEAR', targetDate: '2027-01-01T00:00:00' },
+    cacheTtl: 0,
+    priority: 6,
+  },
 ];
 
 export const DEFAULT_SCHEDULE: Array<{
@@ -83,13 +110,14 @@ export const DEFAULT_SCHEDULE: Array<{
   enabled: boolean;
 }> = [
   { position: 0, feedId: 'weather', duration: 30, enabled: true },
-  { position: 1, feedId: 'news', duration: 25, enabled: true },
-  { position: 2, feedId: 'launches', duration: 25, enabled: true },
-  { position: 3, feedId: 'iss', duration: 25, enabled: true },
-  { position: 4, feedId: 'flights', duration: 20, enabled: true },
-  { position: 5, feedId: 'wikipedia', duration: 25, enabled: true },
-  { position: 6, feedId: 'moon', duration: 20, enabled: true },
-  { position: 7, feedId: 'quotes', duration: 30, enabled: true },
+  { position: 1, feedId: 'sports', duration: 30, enabled: true },
+  { position: 2, feedId: 'news', duration: 25, enabled: true },
+  { position: 3, feedId: 'launches', duration: 25, enabled: true },
+  { position: 4, feedId: 'iss', duration: 25, enabled: true },
+  { position: 5, feedId: 'flights', duration: 20, enabled: true },
+  { position: 6, feedId: 'wikipedia', duration: 25, enabled: true },
+  { position: 7, feedId: 'moon', duration: 20, enabled: true },
+  { position: 8, feedId: 'quotes', duration: 30, enabled: true },
 ];
 
 export const DEFAULT_MESSAGES = [

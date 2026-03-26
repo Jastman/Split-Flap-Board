@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { SAFE_CHARS } from '@/types/board';
+import { DRUM_CHARS } from '@/types/board';
 
 interface FlapCellProps {
   char: string;
@@ -19,13 +19,31 @@ interface FlapCellProps {
 }
 
 function getCharIndex(c: string): number {
-  const idx = SAFE_CHARS.indexOf(c);
+  const idx = DRUM_CHARS.indexOf(c);
   return idx === -1 ? 0 : idx;
 }
 
-function nextChar(current: string): string {
-  const idx = getCharIndex(current);
-  return SAFE_CHARS[(idx + 1) % SAFE_CHARS.length];
+/** Build the shortest-path cycle (forward or backward) from `from` to `to`. */
+function buildCycle(from: string, to: string): string[] {
+  if (from === to) return [];
+  const n = DRUM_CHARS.length;
+  const fromIdx = getCharIndex(from);
+  const toIdx = getCharIndex(to);
+
+  const forwardSteps = (toIdx - fromIdx + n) % n;
+  const backwardSteps = (fromIdx - toIdx + n) % n;
+
+  const cycle: string[] = [];
+  if (forwardSteps <= backwardSteps) {
+    for (let i = 1; i <= forwardSteps; i++) {
+      cycle.push(DRUM_CHARS[(fromIdx + i) % n]);
+    }
+  } else {
+    for (let i = 1; i <= backwardSteps; i++) {
+      cycle.push(DRUM_CHARS[(fromIdx - i + n) % n]);
+    }
+  }
+  return cycle;
 }
 
 export default function FlapCell({
@@ -48,18 +66,6 @@ export default function FlapCell({
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const startedRef = useRef(false);
-
-  const buildCycle = useCallback((from: string, to: string): string[] => {
-    if (from === to) return [];
-    const cycle: string[] = [];
-    let c = from;
-    let safety = SAFE_CHARS.length + 1;
-    while (c !== to && safety-- > 0) {
-      c = nextChar(c);
-      cycle.push(c);
-    }
-    return cycle;
-  }, []);
 
   const runNextFlip = useCallback(() => {
     if (cycleRef.current.length === 0) {
@@ -86,6 +92,7 @@ export default function FlapCell({
     }, duration);
   }, [flipSpeed]);
 
+  // Cleanup on unmount only
   useEffect(() => {
     return () => {
       clearTimeout(timerRef.current);
@@ -96,22 +103,27 @@ export default function FlapCell({
   useEffect(() => {
     if (char === targetChar) return;
 
-    cycleRef.current = buildCycle(char, targetChar);
+    // Cancel any in-flight animation before starting a new one
+    clearTimeout(timerRef.current);
+    clearTimeout(animTimerRef.current);
+    startedRef.current = false;
+    setIsFlipping(false);
 
+    cycleRef.current = buildCycle(char, targetChar);
     if (cycleRef.current.length === 0) return;
 
     timerRef.current = setTimeout(() => {
-      if (!startedRef.current) {
-        startedRef.current = true;
-        onFlipStart?.();
-        runNextFlip();
-      }
+      startedRef.current = true;
+      onFlipStart?.();
+      runNextFlip();
     }, flipDelay);
 
     return () => {
       clearTimeout(timerRef.current);
+      clearTimeout(animTimerRef.current);
+      startedRef.current = false;
     };
-  }, [char, targetChar, flipDelay, buildCycle, runNextFlip, onFlipStart]);
+  }, [char, targetChar, flipDelay, runNextFlip, onFlipStart]);
 
   const topBg = isAccent ? accentColor : cellBg;
   const bottomBg = cellBg;
@@ -124,6 +136,9 @@ export default function FlapCell({
     userSelect: 'none',
     WebkitFontSmoothing: 'antialiased',
   };
+
+  const displayStr = displayChar === ' ' ? '\u00A0' : displayChar;
+  const targetStr = targetChar === ' ' ? '\u00A0' : targetChar;
 
   return (
     <div
@@ -156,13 +171,8 @@ export default function FlapCell({
           borderBottom: '1px solid rgba(0,0,0,0.8)',
         }}
       >
-        <span
-          style={{
-            ...charStyle,
-            transform: 'translateY(50%)',
-          }}
-        >
-          {displayChar === ' ' ? '\u00A0' : displayChar}
+        <span style={{ ...charStyle, transform: 'translateY(50%)' }}>
+          {displayStr}
         </span>
       </div>
 
@@ -183,13 +193,8 @@ export default function FlapCell({
           boxSizing: 'border-box',
         }}
       >
-        <span
-          style={{
-            ...charStyle,
-            transform: 'translateY(-50%)',
-          }}
-        >
-          {targetChar === ' ' ? '\u00A0' : targetChar}
+        <span style={{ ...charStyle, transform: 'translateY(-50%)' }}>
+          {targetStr}
         </span>
       </div>
 
@@ -226,13 +231,8 @@ export default function FlapCell({
             boxSizing: 'border-box',
           }}
         >
-          <span
-            style={{
-              ...charStyle,
-              transform: 'translateY(-50%)',
-            }}
-          >
-            {displayChar === ' ' ? '\u00A0' : displayChar}
+          <span style={{ ...charStyle, transform: 'translateY(-50%)' }}>
+            {displayStr}
           </span>
         </div>
 
@@ -253,13 +253,8 @@ export default function FlapCell({
             boxSizing: 'border-box',
           }}
         >
-          <span
-            style={{
-              ...charStyle,
-              transform: 'translateY(50%)',
-            }}
-          >
-            {targetChar === ' ' ? '\u00A0' : targetChar}
+          <span style={{ ...charStyle, transform: 'translateY(50%)' }}>
+            {targetStr}
           </span>
         </div>
       </div>

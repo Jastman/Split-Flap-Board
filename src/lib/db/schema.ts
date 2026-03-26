@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_META = `
 CREATE TABLE IF NOT EXISTS _meta (
@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS app_config (
   latitude         REAL    NOT NULL DEFAULT 40.7128,
   longitude        REAL    NOT NULL DEFAULT -74.0060,
   timezone         TEXT    NOT NULL DEFAULT 'America/New_York',
-  cols             INTEGER NOT NULL DEFAULT 26,
-  rows             INTEGER NOT NULL DEFAULT 3,
+  cols             INTEGER NOT NULL DEFAULT 32,
+  rows             INTEGER NOT NULL DEFAULT 4,
   font_size        REAL    NOT NULL DEFAULT 1.0,
   flip_speed       INTEGER NOT NULL DEFAULT 80,
   wave_delay       INTEGER NOT NULL DEFAULT 40,
@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS app_config (
   cell_height      TEXT    NOT NULL DEFAULT '4rem',
   preset_id        TEXT    NOT NULL DEFAULT 'twa',
   rotation_interval INTEGER NOT NULL DEFAULT 30,
+  share_token      TEXT,
+  share_enabled    INTEGER NOT NULL DEFAULT 0,
+  share_hide_location INTEGER NOT NULL DEFAULT 0,
+  share_hide_calendar INTEGER NOT NULL DEFAULT 0,
   updated_at       INTEGER NOT NULL DEFAULT (unixepoch())
 );
 `;
@@ -76,7 +80,9 @@ CREATE TABLE IF NOT EXISTS schedule_slots (
   feed_id    TEXT    REFERENCES feeds(id) ON DELETE SET NULL,
   message_id INTEGER REFERENCES messages(id) ON DELETE SET NULL,
   duration   INTEGER NOT NULL DEFAULT 30,
-  enabled    INTEGER NOT NULL DEFAULT 1
+  enabled    INTEGER NOT NULL DEFAULT 1,
+  start_hour INTEGER,
+  end_hour   INTEGER
 );
 `;
 

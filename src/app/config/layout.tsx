@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { href: '/config/display', label: 'Display' },
   { href: '/config/schedule', label: 'Schedule' },
   { href: '/config/messages', label: 'Messages' },
+  { href: '/config/share', label: 'Share' },
 ];
 
 export default function ConfigLayout({ children }: { children: React.ReactNode }) {

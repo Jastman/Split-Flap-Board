@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import FlapRow from './FlapRow';
 import type { AppConfig } from '@/types/config';
+import { DRUM_CHARS } from '@/types/board';
 
 interface SplitFlapBoardProps {
   targetRows: string[];
@@ -67,12 +68,11 @@ export default function SplitFlapBoard({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDisplayedRows(targetRows.map((row) => row.padEnd(config.cols, ' ').slice(0, config.cols)));
-    }, config.cols * config.waveDelay + SAFE_CHARS_MAX * config.flipSpeed + 200);
+    // Half of DRUM_CHARS: bidirectional cycling means max steps = DRUM_CHARS.length / 2
+    }, config.cols * config.waveDelay + Math.ceil(DRUM_CHARS.length / 2) * config.flipSpeed + 200);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetRows]);
-
-  const SAFE_CHARS_MAX = 54; // max drum steps in one flip cycle
 
   const emptyRows = Array.from(
     { length: Math.max(0, config.rows - displayedRows.length) },

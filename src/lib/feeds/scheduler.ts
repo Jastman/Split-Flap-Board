@@ -10,6 +10,9 @@ import { fetchMoon } from './moon';
 import { fetchWikipediaOnThisDay } from './wikipedia';
 import { fetchFlights } from './flights';
 import { fetchQuote } from './quotes';
+import { fetchSports } from './sports';
+import { fetchStocks } from './stocks';
+import { fetchCountdown } from './countdown';
 
 interface ScheduleSlot {
   id: number;
@@ -18,6 +21,8 @@ interface ScheduleSlot {
   message_id: number | null;
   duration: number;
   enabled: number;
+  start_hour: number | null;
+  end_hour: number | null;
 }
 
 interface MessageRow {
@@ -67,6 +72,30 @@ function getConfig(): AppConfig {
   };
 }
 
+/** Returns true if the current hour (in local server time) is within [start, end). */
+function isWithinHours(
+  startHour: number | null,
+  endHour: number | null,
+  timezone: string,
+): boolean {
+  if (startHour === null || endHour === null) return true;
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    });
+    const currentHour = parseInt(formatter.format(new Date()), 10);
+    if (startHour <= endHour) {
+      return currentHour >= startHour && currentHour < endHour;
+    }
+    // Wraps midnight: e.g. start=22, end=6
+    return currentHour >= startHour || currentHour < endHour;
+  } catch {
+    return true;
+  }
+}
+
 async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<FeedResult | null> {
   const feedConfig = JSON.parse(feedRow.config_json) as Record<string, unknown>;
   const cols = config.cols;
@@ -109,6 +138,24 @@ async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<Fee
         return fetchQuote(categories, cols);
       }
 
+      case 'sports': {
+        const sport = (feedConfig.sport as string) ?? 'baseball';
+        const league = (feedConfig.league as string) ?? 'mlb';
+        return await fetchSports(sport, league, cols);
+      }
+
+      case 'stocks': {
+        const symbols = (feedConfig.symbols as string[]) ?? ['SPY', 'QQQ'];
+        return await fetchStocks(symbols, cols);
+      }
+
+      case 'countdown': {
+        const label = (feedConfig.label as string) ?? 'EVENT';
+        const targetDate = (feedConfig.targetDate as string) ?? '';
+        if (!targetDate) return null;
+        return fetchCountdown(label, targetDate, cols);
+      }
+
       default:
         return null;
     }
@@ -120,6 +167,11 @@ async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<Fee
 }
 
 async function getResultForFeed(feedRow: FeedRow, config: AppConfig): Promise<FeedResult | null> {
+  // Countdown is real-time, skip cache
+  if (feedRow.type === 'countdown') {
+    return fetchFeedResult(feedRow, config);
+  }
+
   const cached = getCachedFeed(feedRow.id);
   if (cached) return cached;
 
@@ -154,8 +206,20 @@ export async function getCurrentBoardState(): Promise<{
   const elapsed = now - slotStartedAt;
   const currentDuration = slots[currentSlotIndex % slots.length].duration * 1000;
 
-  // Still within the current slot's duration — return unchanged (client deduplicates on revision)
+  // Still within the current slot's duration — return unchanged revision so client skips update
   if (slotStartedAt > 0 && elapsed < currentDuration) {
+    // Re-fetch the current slot result (from cache) to return proper data
+    const currentSlot = slots[currentSlotIndex % slots.length];
+    if (currentSlot.feed_id) {
+      const feedRow = db
+        .prepare('SELECT * FROM feeds WHERE id = ? AND enabled = 1')
+        .get(currentSlot.feed_id) as FeedRow | undefined;
+      if (feedRow) {
+        const cached = await getResultForFeed(feedRow, config);
+        if (cached) return { result: cached, revision, config };
+      }
+    }
+    // Fallback: return a quote with unchanged revision
     return { result: fetchQuote([], config.cols), revision, config };
   }
 
@@ -167,6 +231,12 @@ export async function getCurrentBoardState(): Promise<{
   // Find the next relevant slot, trying each in order
   for (let attempts = 0; attempts < slots.length; attempts++) {
     const slot = slots[currentSlotIndex % slots.length];
+
+    // Check time-of-day restriction
+    if (!isWithinHours(slot.start_hour, slot.end_hour, config.timezone)) {
+      currentSlotIndex = (currentSlotIndex + 1) % slots.length;
+      continue;
+    }
 
     if (slot.feed_id) {
       const feedRow = db

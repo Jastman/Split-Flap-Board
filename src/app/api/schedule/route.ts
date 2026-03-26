@@ -18,6 +18,8 @@ export async function PUT(req: NextRequest) {
     message_id?: number;
     duration: number;
     enabled: boolean;
+    start_hour?: number | null;
+    end_hour?: number | null;
   }>;
 
   const db = getDb();
@@ -26,9 +28,17 @@ export async function PUT(req: NextRequest) {
     for (let i = 0; i < body.length; i++) {
       const slot = body[i];
       db.prepare(`
-        INSERT INTO schedule_slots (position, feed_id, message_id, duration, enabled)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(i, slot.feed_id ?? null, slot.message_id ?? null, slot.duration, slot.enabled ? 1 : 0);
+        INSERT INTO schedule_slots (position, feed_id, message_id, duration, enabled, start_hour, end_hour)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        i,
+        slot.feed_id ?? null,
+        slot.message_id ?? null,
+        slot.duration,
+        slot.enabled ? 1 : 0,
+        slot.start_hour ?? null,
+        slot.end_hour ?? null,
+      );
     }
   });
   replace();

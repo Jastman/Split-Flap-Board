@@ -13,6 +13,21 @@ interface FlapRowProps {
   onCellFlip?: () => void;
 }
 
+/** Split a string into an array of grapheme clusters (handles emoji). */
+function toGraphemes(str: string): string[] {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return Array.from(new Intl.Segmenter().segment(str), (s) => s.segment);
+  }
+  return Array.from(str);
+}
+
+/** Return exactly `cols` grapheme tokens, padding with spaces or truncating. */
+function toColArray(row: string, cols: number): string[] {
+  const graphemes = toGraphemes(row);
+  if (graphemes.length >= cols) return graphemes.slice(0, cols);
+  return [...graphemes, ...Array(cols - graphemes.length).fill(' ')];
+}
+
 export default function FlapRow({
   currentRow,
   targetRow,
@@ -22,8 +37,8 @@ export default function FlapRow({
   waveDelay,
   onCellFlip,
 }: FlapRowProps) {
-  const current = currentRow.padEnd(cols, ' ').slice(0, cols);
-  const target = targetRow.padEnd(cols, ' ').slice(0, cols);
+  const current = toColArray(currentRow, cols);
+  const target = toColArray(targetRow, cols);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row' }}>

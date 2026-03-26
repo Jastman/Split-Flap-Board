@@ -222,6 +222,24 @@ export default function BoardPage() {
           }}>
           {audioEnabled ? 'SND ON' : 'SND OFF'}
         </button>
+        <a href="/clock" onClick={(e) => e.stopPropagation()}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', fontFamily: 'monospace',
+            padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: '3px',
+            letterSpacing: '0.1em', textDecoration: 'none',
+          }}>
+          CLOCK
+        </a>
+        <a href="/config/share" onClick={(e) => e.stopPropagation()}
+          style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', fontFamily: 'monospace',
+            padding: '0.3rem 0.6rem', cursor: 'pointer', borderRadius: '3px',
+            letterSpacing: '0.1em', textDecoration: 'none',
+          }}>
+          SHARE
+        </a>
         <a href="/config" onClick={(e) => e.stopPropagation()}
           style={{
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',

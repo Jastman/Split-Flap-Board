@@ -1,27 +1,41 @@
 import { SAFE_CHARS } from '@/types/board';
 
+/** Split a string into grapheme clusters (handles multi-byte emoji). */
+function toGraphemes(str: string): string[] {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return Array.from(new Intl.Segmenter().segment(str), (s) => s.segment);
+  }
+  return Array.from(str);
+}
+
 /**
- * Sanitize a string to only contain characters in the flap drum charset,
- * convert to uppercase, and replace unsupported chars with space.
+ * Sanitize a string to only contain characters in SAFE_CHARS,
+ * convert to uppercase, and replace unsupported chars with a space.
  */
 export function sanitize(input: string): string {
-  return input
-    .toUpperCase()
-    .split('')
+  return toGraphemes(input.toUpperCase())
     .map((c) => (SAFE_CHARS.includes(c) ? c : ' '))
     .join('');
 }
 
 /**
- * Pad or truncate a string to exactly `cols` characters.
+ * Grapheme-aware length: count visual characters, not code units.
  */
-export function padRow(str: string, cols: number): string {
-  if (str.length >= cols) return str.slice(0, cols);
-  return str + ' '.repeat(cols - str.length);
+export function gLen(str: string): number {
+  return toGraphemes(str).length;
 }
 
 /**
- * Word-wrap `text` into lines of at most `cols` characters.
+ * Pad or truncate a string to exactly `cols` grapheme clusters.
+ */
+export function padRow(str: string, cols: number): string {
+  const graphemes = toGraphemes(str);
+  if (graphemes.length >= cols) return graphemes.slice(0, cols).join('');
+  return str + ' '.repeat(cols - graphemes.length);
+}
+
+/**
+ * Word-wrap `text` into lines of at most `cols` grapheme clusters.
  * Preserves existing newlines as explicit line breaks.
  */
 export function wordWrap(text: string, cols: number): string[] {
@@ -37,18 +51,19 @@ export function wordWrap(text: string, cols: number): string[] {
     let current = '';
     for (const word of words) {
       const candidate = current ? `${current} ${word}` : word;
-      if (candidate.length <= cols) {
+      if (gLen(candidate) <= cols) {
         current = candidate;
       } else {
         if (current) lines.push(current);
-        // If word itself is longer than cols, break it
-        if (word.length > cols) {
-          let remaining = word;
+        if (gLen(word) > cols) {
+          // Break a word that exceeds col width (grapheme-aware)
+          const wordChars = toGraphemes(word);
+          let remaining = wordChars;
           while (remaining.length > cols) {
-            lines.push(remaining.slice(0, cols));
+            lines.push(remaining.slice(0, cols).join(''));
             remaining = remaining.slice(cols);
           }
-          current = remaining;
+          current = remaining.join('');
         } else {
           current = word;
         }
@@ -61,21 +76,18 @@ export function wordWrap(text: string, cols: number): string[] {
 }
 
 /**
- * Center-align a string within `cols` characters.
+ * Center-align a string within `cols` grapheme clusters.
  */
 export function center(str: string, cols: number): string {
-  if (str.length >= cols) return str.slice(0, cols);
-  const totalPad = cols - str.length;
+  const len = gLen(str);
+  if (len >= cols) return toGraphemes(str).slice(0, cols).join('');
+  const totalPad = cols - len;
   const leftPad = Math.floor(totalPad / 2);
   return ' '.repeat(leftPad) + str + ' '.repeat(totalPad - leftPad);
 }
 
 /**
- * Format arbitrary text into exactly `maxRows` padded rows of `cols` chars each.
- * @param text - raw text (may include newlines)
- * @param cols - board column count
- * @param maxRows - maximum rows to return
- * @param align - 'left' or 'center'
+ * Format arbitrary text into exactly `maxRows` padded rows of `cols` grapheme clusters each.
  */
 export function formatForBoard(
   text: string,

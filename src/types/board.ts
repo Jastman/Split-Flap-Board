@@ -12,9 +12,23 @@ export interface GridConfig {
   rows: number;
 }
 
+// All characters available on the physical drum, in order.
+// Single-codepoint emoji are included for weather/feed decorations.
 export const FLAP_CHARACTERS =
-  ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:!?-/\'@#$%&()°→←↑↓☀️🌤️⛅🌧️🌩️❄️🌠🚀🛸🌙🌑🌒🌓🌔🌕🌖🌗🌘';
+  ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:!?-/\'@#$%&()°→←↑↓' +
+  '☀⛅❄🌠🚀🛸🌙🌑🌒🌓🌔🌕🌖🌗🌘';
 
-// Safe subset for formatting (ASCII-only characters in the drum sequence)
+// Pre-split into an array of grapheme clusters so multi-byte emoji are one element each.
+export const DRUM_CHARS: string[] = (() => {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return Array.from(new Intl.Segmenter().segment(FLAP_CHARACTERS), (s) => s.segment);
+  }
+  return Array.from(FLAP_CHARACTERS);
+})();
+
+// ASCII-only subset used for server-side text sanitisation.
 export const SAFE_CHARS =
-  ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:!?-/\'@#$%&()';
+  ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:!?-/\'@#$%&()°→←↑↓';
+
+// Same as SAFE_CHARS but as an array (for index-safe operations).
+export const SAFE_CHARS_ARR: string[] = SAFE_CHARS.split('');
