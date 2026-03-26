@@ -26,7 +26,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 RUN mkdir -p /data && chown nextjs:nodejs /data
-VOLUME ["/data"]
 ENV SQLITE_PATH=/data/flipflap.db
 
 USER nextjs
