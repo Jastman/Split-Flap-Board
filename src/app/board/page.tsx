@@ -71,6 +71,7 @@ export default function BoardPage() {
         justifyContent: 'center',
         cursor: 'default',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
       {/* Vignette overlay */}
