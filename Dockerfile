@@ -1,4 +1,4 @@
-# Stage 1: Install dependencies
+# Stage 1: Install production dependencies
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
@@ -19,16 +19,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
-
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-RUN mkdir -p /data && chown nextjs:nodejs /data
+# Copy full node_modules from deps stage so native addons
+# (better-sqlite3 .node binary) are guaranteed to be present
+COPY --from=deps /app/node_modules ./node_modules
+
+RUN mkdir -p /data
 ENV SQLITE_PATH=/data/flipflap.db
 
-USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
