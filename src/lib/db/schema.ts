@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const CREATE_META = `
 CREATE TABLE IF NOT EXISTS _meta (
@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS app_config (
   share_enabled    INTEGER NOT NULL DEFAULT 0,
   share_hide_location INTEGER NOT NULL DEFAULT 0,
   share_hide_calendar INTEGER NOT NULL DEFAULT 0,
+  text_h_align     TEXT    NOT NULL DEFAULT 'center',
+  text_v_align     TEXT    NOT NULL DEFAULT 'top',
   updated_at       INTEGER NOT NULL DEFAULT (unixepoch())
 );
 `;

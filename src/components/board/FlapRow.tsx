@@ -9,8 +9,11 @@ interface FlapRowProps {
   cols: number;
   accentCols: number[];
   config: AppConfig;
-  waveDelay: number;
+  /** Per-column start delays (ms). Length must equal cols. */
+  cellDelays: number[];
   onCellFlip?: () => void;
+  /** Increment to trigger ghost flips on unchanged cells (Matrix effect). */
+  ghostTrigger?: number;
 }
 
 /** Split a string into an array of grapheme clusters (handles emoji). */
@@ -34,8 +37,9 @@ export default function FlapRow({
   cols,
   accentCols,
   config,
-  waveDelay,
+  cellDelays,
   onCellFlip,
+  ghostTrigger,
 }: FlapRowProps) {
   const current = toColArray(currentRow, cols);
   const target = toColArray(targetRow, cols);
@@ -55,8 +59,9 @@ export default function FlapRow({
           cellHeight={config.cellHeight}
           fontFamily={config.fontFamily}
           flipSpeed={config.flipSpeed}
-          flipDelay={colIdx * waveDelay}
+          flipDelay={cellDelays[colIdx] ?? 0}
           onFlipStart={onCellFlip}
+          ghostTrigger={ghostTrigger}
         />
       ))}
     </div>

@@ -127,4 +127,21 @@ export function runMigrations(db: Database.Database): void {
     });
     migrate2();
   }
+
+  // ── v3: alignment settings ────────────────────────────────────────────────
+  if (current < 3) {
+    const migrate3 = db.transaction(() => {
+      const appCols = (db.prepare(`PRAGMA table_info(app_config)`).all() as { name: string }[]).map(
+        (r) => r.name,
+      );
+      if (!appCols.includes('text_h_align')) {
+        db.exec(`ALTER TABLE app_config ADD COLUMN text_h_align TEXT NOT NULL DEFAULT 'center'`);
+      }
+      if (!appCols.includes('text_v_align')) {
+        db.exec(`ALTER TABLE app_config ADD COLUMN text_v_align TEXT NOT NULL DEFAULT 'top'`);
+      }
+      db.prepare(`INSERT OR REPLACE INTO _meta (key, value) VALUES ('schema_version', '3')`).run();
+    });
+    migrate3();
+  }
 }

@@ -16,6 +16,8 @@ interface FlapCellProps {
   flipSpeed: number;
   flipDelay: number;
   onFlipStart?: () => void;
+  /** Increment to trigger a ghost flip even when char===targetChar (Matrix effect). */
+  ghostTrigger?: number;
 }
 
 function getCharIndex(c: string): number {
@@ -59,12 +61,14 @@ export default function FlapCell({
   flipSpeed,
   flipDelay,
   onFlipStart,
+  ghostTrigger,
 }: FlapCellProps) {
   const [displayChar, setDisplayChar] = useState(char);
   const [isFlipping, setIsFlipping] = useState(false);
   const cycleRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const ghostTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const startedRef = useRef(false);
 
   const runNextFlip = useCallback(() => {
@@ -92,11 +96,24 @@ export default function FlapCell({
     }, duration);
   }, [flipSpeed]);
 
+  // Ghost flap — triggered for cells that don't change (Matrix "digital rain")
+  useEffect(() => {
+    if (!ghostTrigger || char !== targetChar) return;
+    clearTimeout(ghostTimerRef.current);
+    const flipDur = Math.max(flipSpeed * 0.6, 40);
+    ghostTimerRef.current = setTimeout(() => {
+      setIsFlipping(true);
+      ghostTimerRef.current = setTimeout(() => setIsFlipping(false), flipDur);
+    }, flipDelay);
+    return () => clearTimeout(ghostTimerRef.current);
+  }, [ghostTrigger, char, targetChar, flipDelay, flipSpeed]);
+
   // Cleanup on unmount only
   useEffect(() => {
     return () => {
       clearTimeout(timerRef.current);
       clearTimeout(animTimerRef.current);
+      clearTimeout(ghostTimerRef.current);
     };
   }, []);
 

@@ -69,6 +69,8 @@ function getConfig(): AppConfig {
     cellHeight: (row.cell_height as string) ?? '4rem',
     presetId: (row.preset_id as string) ?? 'twa',
     rotationInterval: (row.rotation_interval as number) ?? 30,
+    textHAlign: ((row.text_h_align as string) ?? 'center') as AppConfig['textHAlign'],
+    textVAlign: ((row.text_v_align as string) ?? 'top') as AppConfig['textVAlign'],
   };
 }
 

@@ -37,6 +37,8 @@ export async function PUT(req: NextRequest) {
   if (body.cellHeight !== undefined) { updates.push('cell_height = ?'); values.push(body.cellHeight); }
   if (body.presetId !== undefined) { updates.push('preset_id = ?'); values.push(body.presetId); }
   if (body.rotationInterval !== undefined) { updates.push('rotation_interval = ?'); values.push(body.rotationInterval); }
+  if (body.textHAlign !== undefined) { updates.push('text_h_align = ?'); values.push(body.textHAlign); }
+  if (body.textVAlign !== undefined) { updates.push('text_v_align = ?'); values.push(body.textVAlign); }
 
   if (updates.length > 0) {
     updates.push('updated_at = unixepoch()');
@@ -71,5 +73,7 @@ function dbRowToConfig(row: Record<string, unknown>): AppConfig {
     cellHeight: (row.cell_height as string) ?? '4rem',
     presetId: (row.preset_id as string) ?? 'twa',
     rotationInterval: (row.rotation_interval as number) ?? 30,
+    textHAlign: ((row.text_h_align as string) ?? 'center') as AppConfig['textHAlign'],
+    textVAlign: ((row.text_v_align as string) ?? 'top') as AppConfig['textVAlign'],
   };
 }

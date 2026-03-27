@@ -20,6 +20,8 @@ export interface AppConfig {
   cellHeight: string;
   presetId: string;
   rotationInterval: number;
+  textHAlign: 'left' | 'center' | 'right' | 'justify';
+  textVAlign: 'top' | 'middle' | 'bottom';
 }
 
 export interface BoardPreset {
@@ -174,4 +176,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   cellHeight: '4rem',
   presetId: 'twa',
   rotationInterval: 30,
+  textHAlign: 'center',
+  textVAlign: 'top',
 };
