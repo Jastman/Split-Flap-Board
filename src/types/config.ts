@@ -22,6 +22,8 @@ export interface AppConfig {
   rotationInterval: number;
   textHAlign: 'left' | 'center' | 'right' | 'justify';
   textVAlign: 'top' | 'middle' | 'bottom';
+  /** Animation patterns enabled for random selection. Empty array = all patterns. */
+  animationPatterns: string[];
 }
 
 export interface BoardPreset {
@@ -178,4 +180,5 @@ export const DEFAULT_CONFIG: AppConfig = {
   rotationInterval: 30,
   textHAlign: 'center',
   textVAlign: 'top',
+  animationPatterns: [],
 };

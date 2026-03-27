@@ -28,8 +28,9 @@ export const ALL_PATTERNS: AnimationPattern[] = [
   'middle-out',
 ];
 
-export function pickRandomPattern(): AnimationPattern {
-  return ALL_PATTERNS[Math.floor(Math.random() * ALL_PATTERNS.length)];
+export function pickRandomPattern(from?: AnimationPattern[]): AnimationPattern {
+  const pool = from && from.length > 0 ? from : ALL_PATTERNS;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /**

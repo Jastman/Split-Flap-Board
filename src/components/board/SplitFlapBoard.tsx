@@ -68,8 +68,11 @@ export default function SplitFlapBoard({
     const changed = targetRows.some((row, i) => row !== prev[i]);
     if (!changed) return;
 
-    // Pick a new pattern and compute its delay matrix
-    const pattern = pickRandomPattern();
+    // Pick a new pattern from the configured pool (empty = all patterns)
+    const pool = config.animationPatterns?.length > 0
+      ? (config.animationPatterns as AnimationPattern[])
+      : undefined;
+    const pattern = pickRandomPattern(pool);
     currentPatternRef.current = pattern;
     delaysRef.current = computeDelays(pattern, config.rows, config.cols, config.waveDelay);
 

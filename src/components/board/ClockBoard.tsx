@@ -128,6 +128,7 @@ export default function ClockBoard({ targetRows, config, onWaveStart }: ClockBoa
             audioVolume: 0,
             textHAlign: 'center',
             textVAlign: 'top',
+            animationPatterns: [],
           }}
           cellDelays={Array.from({ length: config.cols }, (_, i) => i * config.waveDelay)}
           onCellFlip={undefined}

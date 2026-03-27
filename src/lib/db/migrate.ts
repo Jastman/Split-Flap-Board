@@ -144,4 +144,18 @@ export function runMigrations(db: Database.Database): void {
     });
     migrate3();
   }
+
+  // ── v4: per-board animation pattern selection ─────────────────────────────
+  if (current < 4) {
+    const migrate4 = db.transaction(() => {
+      const appCols = (db.prepare(`PRAGMA table_info(app_config)`).all() as { name: string }[]).map(
+        (r) => r.name,
+      );
+      if (!appCols.includes('animation_patterns')) {
+        db.exec(`ALTER TABLE app_config ADD COLUMN animation_patterns TEXT NOT NULL DEFAULT '[]'`);
+      }
+      db.prepare(`INSERT OR REPLACE INTO _meta (key, value) VALUES ('schema_version', '4')`).run();
+    });
+    migrate4();
+  }
 }

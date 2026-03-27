@@ -39,6 +39,7 @@ export async function PUT(req: NextRequest) {
   if (body.rotationInterval !== undefined) { updates.push('rotation_interval = ?'); values.push(body.rotationInterval); }
   if (body.textHAlign !== undefined) { updates.push('text_h_align = ?'); values.push(body.textHAlign); }
   if (body.textVAlign !== undefined) { updates.push('text_v_align = ?'); values.push(body.textVAlign); }
+  if (body.animationPatterns !== undefined) { updates.push('animation_patterns = ?'); values.push(JSON.stringify(body.animationPatterns)); }
 
   if (updates.length > 0) {
     updates.push('updated_at = unixepoch()');
@@ -75,5 +76,8 @@ function dbRowToConfig(row: Record<string, unknown>): AppConfig {
     rotationInterval: (row.rotation_interval as number) ?? 30,
     textHAlign: ((row.text_h_align as string) ?? 'center') as AppConfig['textHAlign'],
     textVAlign: ((row.text_v_align as string) ?? 'top') as AppConfig['textVAlign'],
+    animationPatterns: (() => {
+      try { return JSON.parse((row.animation_patterns as string) ?? '[]'); } catch { return []; }
+    })(),
   };
 }

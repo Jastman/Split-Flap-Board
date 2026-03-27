@@ -71,6 +71,9 @@ function getConfig(): AppConfig {
     rotationInterval: (row.rotation_interval as number) ?? 30,
     textHAlign: ((row.text_h_align as string) ?? 'center') as AppConfig['textHAlign'],
     textVAlign: ((row.text_v_align as string) ?? 'top') as AppConfig['textVAlign'],
+    animationPatterns: (() => {
+      try { return JSON.parse((row.animation_patterns as string) ?? '[]'); } catch { return []; }
+    })(),
   };
 }
 

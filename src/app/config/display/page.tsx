@@ -254,6 +254,76 @@ export default function DisplayPage() {
           <Slider label="FLIP SPEED (MS)" value={config.flipSpeed} min={30} max={200} onChange={(v) => setConfig({ ...config, flipSpeed: v })} />
           <Slider label="WAVE DELAY (MS)" value={config.waveDelay} min={10} max={100} onChange={(v) => setConfig({ ...config, waveDelay: v })} />
           <Slider label="AUDIO VOLUME" value={Math.round(config.audioVolume * 100)} min={0} max={100} onChange={(v) => setConfig({ ...config, audioVolume: v / 100 })} />
+
+          {/* Pattern selection */}
+          <div style={{ marginTop: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.1em' }}>TRANSITION PATTERN</label>
+              <button
+                onClick={() => setConfig({ ...config, animationPatterns: [] })}
+                style={{
+                  background: (config.animationPatterns ?? []).length === 0 ? '#e85d04' : '#111',
+                  border: `1px solid ${(config.animationPatterns ?? []).length === 0 ? '#e85d04' : '#333'}`,
+                  color: (config.animationPatterns ?? []).length === 0 ? '#fff' : '#666',
+                  padding: '0.2rem 0.5rem', borderRadius: '3px', cursor: 'pointer',
+                  fontFamily: 'monospace', fontSize: '0.6rem', letterSpacing: '0.08em',
+                }}
+              >ALL (RANDOM)</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.3rem' }}>
+              {([
+                ['wave-lr',    'L→R Wave'],
+                ['wave-rl',    'R→L Wave'],
+                ['top-bottom', 'Top→Bottom'],
+                ['spiral',     'Spiral'],
+                ['hatch',      'Hatch'],
+                ['snake-up',   'Snake Up'],
+                ['matrix',     'Matrix'],
+                ['row-by-row', 'Row by Row'],
+                ['dissolve',   'Dissolve'],
+                ['diagonal',   'Diagonal'],
+                ['middle-out', 'Middle Out'],
+              ] as [string, string][]).map(([id, label]) => {
+                const patterns = config.animationPatterns ?? [];
+                const active = patterns.length > 0 && patterns.includes(id);
+                return (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      const cur = config.animationPatterns ?? [];
+                      let next: string[];
+                      if (cur.length === 0) {
+                        next = [id]; // exit ALL mode → just this one
+                      } else if (cur.includes(id)) {
+                        next = cur.filter((p) => p !== id);
+                        if (next.length === 0) next = [id]; // keep at least 1
+                      } else {
+                        next = [...cur, id];
+                      }
+                      setConfig({ ...config, animationPatterns: next });
+                    }}
+                    style={{
+                      background: active ? 'rgba(232,93,4,0.15)' : '#0d0d0d',
+                      border: `1px solid ${active ? '#e85d04' : '#2a2a2a'}`,
+                      color: active ? '#e85d04' : '#555',
+                      padding: '0.3rem 0.25rem', borderRadius: '3px', cursor: 'pointer',
+                      fontFamily: 'monospace', fontSize: '0.6rem', letterSpacing: '0.04em',
+                      textAlign: 'center' as const,
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: '0.62rem', color: '#3a3a3a', marginTop: '0.4rem' }}>
+              {(config.animationPatterns ?? []).length === 0
+                ? 'Randomly picks from all 11 patterns on each board change'
+                : (config.animationPatterns ?? []).length === 1
+                  ? `Always uses: ${config.animationPatterns[0]}`
+                  : `Randomly picks from ${config.animationPatterns.length} selected patterns`}
+            </p>
+          </div>
         </div>
 
         <div>
