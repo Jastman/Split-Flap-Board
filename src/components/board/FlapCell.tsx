@@ -101,7 +101,15 @@ export default function FlapCell({
   }, []);
 
   useEffect(() => {
-    if (char === targetChar) return;
+    if (char === targetChar) {
+      // Board forced a snap (sync timer) — immediately show the settled char
+      clearTimeout(timerRef.current);
+      clearTimeout(animTimerRef.current);
+      setDisplayChar(targetChar);
+      setIsFlipping(false);
+      startedRef.current = false;
+      return;
+    }
 
     // Cancel any in-flight animation before starting a new one
     clearTimeout(timerRef.current);
