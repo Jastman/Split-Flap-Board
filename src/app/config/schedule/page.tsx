@@ -100,8 +100,8 @@ export default function SchedulePage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.15em', margin: 0 }}>SCHEDULE</h1>
-          <p style={{ color: '#555', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.25rem', color: '#fff', letterSpacing: '-0.01em' }}>Schedule</h1>
+          <p style={{ color: '#888', fontSize: '0.9rem', marginTop: 0 }}>
             Rotation order — feeds that are not timely are automatically skipped.
             Optionally restrict slots to certain hours of the day.
           </p>
@@ -140,10 +140,10 @@ export default function SchedulePage() {
                 display: 'flex', alignItems: 'center', gap: '0.75rem',
                 padding: '0.6rem 1rem',
               }}>
-                <span style={{ color: '#444', fontSize: '0.7rem', fontFamily: 'monospace', width: '1.5rem', textAlign: 'right' }}>
+                <span style={{ color: '#666', fontSize: '0.8rem', fontFamily: 'monospace', width: '1.5rem', textAlign: 'right' }}>
                   {idx + 1}.
                 </span>
-                <span style={{ flex: 1, fontSize: '0.85rem', letterSpacing: '0.06em' }}>
+                <span style={{ flex: 1, fontSize: '0.95rem' }}>
                   {getFeedLabel(slot.feed_id)}
                 </span>
 

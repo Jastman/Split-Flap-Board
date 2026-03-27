@@ -6,7 +6,6 @@ import { useAudio } from '@/hooks/useAudio';
 import type { BoardState } from '@/types/board';
 import type { AppConfig } from '@/types/config';
 import { DEFAULT_CONFIG } from '@/types/config';
-import { use } from 'react';
 
 interface ExtendedBoardState extends BoardState {
   config: AppConfig;
@@ -52,8 +51,8 @@ function useSharedBoardState(token: string) {
   return { state, error, config: state?.config ?? DEFAULT_CONFIG };
 }
 
-export default function SharedBoardPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = use(params);
+export default function SharedBoardPage({ params }: { params: { token: string } }) {
+  const { token } = params;
   const { state, error, config } = useSharedBoardState(token);
   const { scheduleWave, isEnabled: audioEnabled, isReady: audioReady, enable, toggle: toggleAudio } =
     useAudio(config.audioEnabled, config.audioVolume);

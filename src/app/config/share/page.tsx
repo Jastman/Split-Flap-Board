@@ -9,6 +9,55 @@ interface ShareSettings {
   hideCalendar: boolean;
 }
 
+function Toggle({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
+      {/* Track */}
+      <div
+        onClick={() => onChange(!checked)}
+        style={{
+          flexShrink: 0,
+          marginTop: '2px',
+          width: '42px',
+          height: '24px',
+          borderRadius: '12px',
+          background: checked ? '#e85d04' : '#333',
+          position: 'relative',
+          transition: 'background 0.2s',
+          cursor: 'pointer',
+        }}
+      >
+        {/* Knob */}
+        <div style={{
+          position: 'absolute',
+          top: '3px',
+          left: checked ? '21px' : '3px',
+          width: '18px',
+          height: '18px',
+          borderRadius: '50%',
+          background: '#fff',
+          transition: 'left 0.2s',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+        }} />
+      </div>
+      <div>
+        <div style={{ fontSize: '0.95rem', color: '#e0e0e0', fontWeight: 500 }}>{label}</div>
+        {description && <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px', lineHeight: 1.4 }}>{description}</div>}
+      </div>
+    </label>
+  );
+}
+
 export default function SharePage() {
   const [settings, setSettings] = useState<ShareSettings>({
     token: null,
@@ -30,9 +79,7 @@ export default function SharePage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (settings.token && settings.enabled) {
@@ -44,14 +91,15 @@ export default function SharePage() {
 
   const save = useCallback(async (updates: Partial<ShareSettings> & { regenerate?: boolean }) => {
     setSaving(true);
+    const merged = { ...settings, ...updates };
     const res = await fetch('/api/share', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...settings, ...updates }),
+      body: JSON.stringify(merged),
     });
     if (res.ok) {
       const data = (await res.json()) as { token: string };
-      setSettings((prev) => ({ ...prev, ...updates, token: data.token }));
+      setSettings({ ...merged, token: data.token });
     }
     setSaving(false);
   }, [settings]);
@@ -65,181 +113,160 @@ export default function SharePage() {
   }, [shareUrl]);
 
   const embedCode = shareUrl
-    ? `<iframe src="${shareUrl}?embed=1" width="800" height="300" frameborder="0" allowfullscreen></iframe>`
+    ? `<iframe src="${shareUrl}" width="800" height="300" frameborder="0" allowfullscreen></iframe>`
     : '';
 
-  const inputStyle: React.CSSProperties = {
-    background: '#111',
-    border: '1px solid #333',
-    color: '#e5e5e5',
-    fontFamily: 'monospace',
-    fontSize: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '3px',
-    width: '100%',
-    boxSizing: 'border-box',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    background: '#e85d04',
-    border: 'none',
-    color: '#fff',
-    fontFamily: 'monospace',
-    fontSize: '0.75rem',
-    padding: '0.4rem 1rem',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    letterSpacing: '0.08em',
-  };
-
-  const toggleStyle = (active: boolean): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    cursor: 'pointer',
-    color: active ? '#e85d04' : '#666',
-    fontFamily: 'monospace',
-    fontSize: '0.8rem',
-    letterSpacing: '0.06em',
-    userSelect: 'none',
-  });
-
   if (loading) {
-    return <p style={{ color: '#666', fontFamily: 'monospace' }}>LOADING...</p>;
+    return <p style={{ color: '#888' }}>Loading...</p>;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '600px' }}>
       <div>
-        <h1 style={{ fontSize: '1.1rem', letterSpacing: '0.12em', margin: '0 0 0.25rem' }}>
-          SHARE
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.4rem', color: '#fff', letterSpacing: '-0.01em' }}>
+          Share Board
         </h1>
-        <p style={{ color: '#666', fontSize: '0.8rem', margin: 0 }}>
-          Share a read-only live view of your board. Anyone with the link can view it — no account required.
+        <p style={{ color: '#888', fontSize: '0.9rem', margin: 0 }}>
+          Share a live read-only view of your board. Anyone with the link can view it — no account needed.
         </p>
       </div>
 
-      {/* Enable toggle */}
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <label style={toggleStyle(settings.enabled)}>
-          <input
-            type="checkbox"
-            checked={settings.enabled}
-            onChange={(e) => save({ enabled: e.target.checked })}
-            style={{ accentColor: '#e85d04' }}
-          />
-          {settings.enabled ? 'SHARING ENABLED' : 'SHARING DISABLED'}
-        </label>
-
-        {!settings.enabled && (
-          <p style={{ color: '#555', fontSize: '0.75rem', margin: 0, fontFamily: 'monospace' }}>
-            Enable sharing to generate a public link to your board.
-          </p>
-        )}
-      </section>
+      {/* Main sharing toggle */}
+      <div style={{
+        background: '#181818',
+        border: '1px solid #2a2a2a',
+        borderRadius: '8px',
+        padding: '1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+      }}>
+        <Toggle
+          checked={settings.enabled}
+          onChange={(v) => save({ enabled: v })}
+          label={settings.enabled ? 'Sharing ON' : 'Sharing OFF'}
+          description={settings.enabled
+            ? 'Your board is publicly accessible via the link below.'
+            : 'Enable to generate a public link to your board.'}
+        />
+      </div>
 
       {settings.enabled && (
         <>
-          {/* Privacy warnings */}
-          <section style={{
-            background: 'rgba(232,93,4,0.08)',
-            border: '1px solid rgba(232,93,4,0.3)',
-            borderRadius: '4px',
-            padding: '1rem',
+          {/* Privacy controls */}
+          <div style={{
+            background: 'rgba(232,93,4,0.07)',
+            border: '1px solid rgba(232,93,4,0.25)',
+            borderRadius: '8px',
+            padding: '1.25rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.75rem',
+            gap: '1rem',
           }}>
-            <p style={{ color: '#e85d04', fontSize: '0.75rem', fontFamily: 'monospace', margin: 0, letterSpacing: '0.08em' }}>
-              ⚠ PRIVACY NOTICE
-            </p>
-            <p style={{ color: '#aaa', fontSize: '0.75rem', margin: 0, lineHeight: 1.6 }}>
-              Your shared board may include personal data. Weather, flights, and ISS passes are based on
-              your GPS location. Your calendar events are visible if the calendar feed is enabled.
-              Control what&apos;s visible using the options below.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={toggleStyle(settings.hideLocation)}>
-                <input
-                  type="checkbox"
-                  checked={settings.hideLocation}
-                  onChange={(e) => save({ hideLocation: e.target.checked })}
-                  style={{ accentColor: '#e85d04' }}
-                />
-                HIDE LOCATION-BASED FEEDS (weather, flights, ISS)
-              </label>
-              <label style={toggleStyle(settings.hideCalendar)}>
-                <input
-                  type="checkbox"
-                  checked={settings.hideCalendar}
-                  onChange={(e) => save({ hideCalendar: e.target.checked })}
-                  style={{ accentColor: '#e85d04' }}
-                />
-                HIDE CALENDAR FEED
-              </label>
+            <div>
+              <p style={{ color: '#e85d04', fontSize: '0.8rem', fontWeight: 600, margin: '0 0 0.25rem', letterSpacing: '0.04em' }}>
+                PRIVACY
+              </p>
+              <p style={{ color: '#999', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+                Your board may contain personal data. Control what viewers can see.
+              </p>
             </div>
-          </section>
 
-          {/* Share URL */}
-          <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <p style={{ color: '#888', fontSize: '0.75rem', fontFamily: 'monospace', margin: 0, letterSpacing: '0.06em' }}>
-              SHARE LINK
-            </p>
+            <Toggle
+              checked={settings.hideLocation}
+              onChange={(v) => save({ hideLocation: v })}
+              label="Hide location-based feeds"
+              description="Hides weather, overhead flights, and ISS passes (based on your GPS coordinates)."
+            />
+            <Toggle
+              checked={settings.hideCalendar}
+              onChange={(v) => save({ hideCalendar: v })}
+              label="Hide calendar feed"
+              description="Hides calendar events from the shared view."
+            />
+          </div>
+
+          {/* Share link */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ccc' }}>Share Link</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
                 readOnly
                 value={shareUrl}
-                style={inputStyle}
+                style={{
+                  flex: 1,
+                  background: '#111',
+                  border: '1px solid #333',
+                  color: '#e0e0e0',
+                  fontSize: '0.85rem',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '5px',
+                  fontFamily: 'monospace',
+                }}
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
-              <button style={btnStyle} onClick={copyUrl}>
-                {copied ? 'COPIED!' : 'COPY'}
+              <button
+                onClick={copyUrl}
+                style={{
+                  background: '#e85d04', border: 'none', color: '#fff',
+                  padding: '0.5rem 1rem', borderRadius: '5px',
+                  cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {copied ? '✓ Copied' : 'Copy'}
               </button>
             </div>
-            <button
-              style={{ ...btnStyle, background: '#222', border: '1px solid #444', color: '#aaa' }}
-              onClick={() => save({ regenerate: true })}
-              disabled={saving}
-            >
-              GENERATE NEW LINK
-            </button>
-            <p style={{ color: '#444', fontSize: '0.7rem', fontFamily: 'monospace', margin: 0 }}>
-              Generating a new link will invalidate the old one immediately.
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => save({ regenerate: true })}
+                disabled={saving}
+                style={{
+                  background: '#1e1e1e', border: '1px solid #333', color: '#aaa',
+                  padding: '0.4rem 0.85rem', borderRadius: '5px',
+                  cursor: 'pointer', fontSize: '0.8rem',
+                }}
+              >
+                Generate new link
+              </button>
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: '#1e1e1e', border: '1px solid #333', color: '#aaa',
+                  padding: '0.4rem 0.85rem', borderRadius: '5px',
+                  fontSize: '0.8rem', textDecoration: 'none', display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                Open shared view ↗
+              </a>
+            </div>
+            <p style={{ color: '#555', fontSize: '0.75rem', margin: 0 }}>
+              Generating a new link will immediately invalidate the old one.
             </p>
-          </section>
+          </div>
 
           {/* Embed code */}
-          <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <p style={{ color: '#888', fontSize: '0.75rem', fontFamily: 'monospace', margin: 0, letterSpacing: '0.06em' }}>
-              EMBED CODE
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ccc' }}>Embed Code</label>
             <textarea
               readOnly
               value={embedCode}
               rows={3}
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
+              style={{
+                background: '#111', border: '1px solid #333', color: '#e0e0e0',
+                fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderRadius: '5px',
+                fontFamily: 'monospace', resize: 'vertical', lineHeight: 1.5,
+                width: '100%', boxSizing: 'border-box',
+              }}
               onClick={(e) => (e.target as HTMLTextAreaElement).select()}
             />
-            <p style={{ color: '#444', fontSize: '0.7rem', fontFamily: 'monospace', margin: 0 }}>
-              Paste this into any webpage to embed a live read-only view of your board.
+            <p style={{ color: '#555', fontSize: '0.75rem', margin: 0 }}>
+              Paste into any webpage to embed a live view of your board.
             </p>
-          </section>
-
-          {/* Preview */}
-          <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <p style={{ color: '#888', fontSize: '0.75rem', fontFamily: 'monospace', margin: 0, letterSpacing: '0.06em' }}>
-              PREVIEW
-            </p>
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ ...btnStyle, textDecoration: 'none', display: 'inline-block', width: 'fit-content' }}
-            >
-              OPEN SHARED VIEW →
-            </a>
-          </section>
+          </div>
         </>
       )}
     </div>

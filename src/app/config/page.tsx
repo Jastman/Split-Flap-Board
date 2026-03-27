@@ -30,10 +30,10 @@ export default function ConfigOverview() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.15em', marginBottom: '0.25rem' }}>
-        SETTINGS
+      <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.25rem', color: '#fff', letterSpacing: '-0.01em' }}>
+        Settings
       </h1>
-      <p style={{ color: '#666', fontSize: '0.8rem', marginBottom: '2rem' }}>
+      <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '2rem' }}>
         {config
           ? `${config.cols}×${config.rows} board · ${config.latitude.toFixed(2)}, ${config.longitude.toFixed(2)}`
           : 'Loading...'}
@@ -55,16 +55,16 @@ export default function ConfigOverview() {
               transition: 'border-color 0.15s',
             }}
           >
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.12em', color: '#e85d04', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e85d04', marginBottom: '0.35rem' }}>
               {s.title}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.desc}</div>
+            <div style={{ fontSize: '0.85rem', color: '#888' }}>{s.desc}</div>
           </Link>
         ))}
       </div>
 
-      <h2 style={{ fontSize: '0.85rem', letterSpacing: '0.12em', color: '#666', marginBottom: '1rem' }}>
-        FEED STATUS
+      <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#bbb', marginBottom: '0.75rem' }}>
+        Feed Status
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {feeds.map((f) => (

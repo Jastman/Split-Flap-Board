@@ -15,14 +15,16 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
       style={{
         minHeight: '100vh',
         background: '#0f0f0f',
-        color: '#e5e5e5',
-        fontFamily: "'Courier Prime', 'Courier New', monospace",
+        color: '#d4d4d4',
+        fontFamily: "system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif",
+        fontSize: '15px',
+        lineHeight: 1.6,
       }}
     >
       {/* Header */}
       <header
         style={{
-          borderBottom: '1px solid #222',
+          borderBottom: '1px solid #2a2a2a',
           padding: '0.75rem 2rem',
           display: 'flex',
           alignItems: 'center',
@@ -36,7 +38,8 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
             textDecoration: 'none',
             fontWeight: 700,
             fontSize: '1.1rem',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.08em',
+            fontFamily: "'Courier Prime', 'Courier New', monospace",
           }}
         >
           FLIPFLAP.
@@ -47,12 +50,12 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
               key={link.href}
               href={link.href}
               style={{
-                color: '#888',
+                color: '#bbb',
                 textDecoration: 'none',
-                fontSize: '0.8rem',
+                fontSize: '0.9rem',
                 padding: '0.3rem 0.75rem',
-                borderRadius: '3px',
-                letterSpacing: '0.08em',
+                borderRadius: '4px',
+                letterSpacing: '0.02em',
                 transition: 'color 0.15s',
               }}
             >
@@ -66,15 +69,14 @@ export default function ConfigLayout({ children }: { children: React.ReactNode }
             style={{
               background: '#1a1a1a',
               border: '1px solid #333',
-              color: '#888',
-              padding: '0.3rem 0.75rem',
-              borderRadius: '3px',
-              fontSize: '0.75rem',
+              color: '#bbb',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '4px',
+              fontSize: '0.85rem',
               textDecoration: 'none',
-              letterSpacing: '0.08em',
             }}
           >
-            ← BOARD
+            ← Board
           </Link>
         </div>
       </header>
