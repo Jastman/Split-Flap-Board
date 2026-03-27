@@ -1,34 +1,29 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import SplitFlapBoard from '@/components/board/SplitFlapBoard';
+import ClockBoard from '@/components/board/ClockBoard';
 import { useAudio } from '@/hooks/useAudio';
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
+// 8 cols: " HH:MM:SS " — wide cells, each digit is physically satisfying to flip
+const COLS = 10;
+
 const CLOCK_CONFIG = {
-  id: 1 as const,
-  cols: 14,
+  cols: COLS,
   rows: 2,
-  cellWidth: '3.5rem',
-  cellHeight: '6rem',
-  flipSpeed: 60,
-  waveDelay: 0,
-  audioEnabled: true,
-  audioVolume: 0.6,
+  cellWidth: '4rem',
+  cellHeight: '7rem',
+  // Slower flip speed = more satisfying mechanical sound and visual
+  flipSpeed: 140,
+  // Small wave delay so digits ripple left-to-right, like an airport board
+  waveDelay: 18,
   accentColor: '#e85d04',
   boardBg: '#1a1a1a',
   cellBg: '#111111',
   charColor: '#f5f0e8',
   fontFamily: "'Courier Prime', 'Courier New', monospace",
-  latitude: 40.7128,
-  longitude: -74.006,
-  timezone: 'America/New_York',
-  fontSize: 1.0,
-  brightness: 1.0,
-  presetId: 'clock',
-  rotationInterval: 0,
 };
 
 function getClockRows(): string[] {
@@ -36,22 +31,20 @@ function getClockRows(): string[] {
   const h = String(now.getHours()).padStart(2, '0');
   const m = String(now.getMinutes()).padStart(2, '0');
   const s = String(now.getSeconds()).padStart(2, '0');
-  const timeStr = `${h}:${m}:${s}`;
+  // " HH:MM:SS " — space padding to fill COLS
+  const timeStr = ` ${h}:${m}:${s} `;
 
   const day = DAYS[now.getDay()];
   const mon = MONTHS[now.getMonth()];
   const dd = String(now.getDate()).padStart(2, '0');
   const yyyy = String(now.getFullYear());
-  const dateStr = `${day} ${mon} ${dd} ${yyyy}`;
+  // " FRI MAR 27" → pad to COLS
+  const raw = `${day} ${mon} ${dd} ${yyyy}`;
+  const pad = Math.max(0, COLS - raw.length);
+  const l = Math.floor(pad / 2);
+  const dateStr = ' '.repeat(l) + raw + ' '.repeat(pad - l);
 
-  const cols = CLOCK_CONFIG.cols;
-  const padCenter = (s: string) => {
-    const pad = Math.max(0, cols - s.length);
-    const l = Math.floor(pad / 2);
-    return ' '.repeat(l) + s + ' '.repeat(pad - l);
-  };
-
-  return [padCenter(timeStr), padCenter(dateStr)];
+  return [timeStr.slice(0, COLS).padEnd(COLS), dateStr.slice(0, COLS).padEnd(COLS)];
 }
 
 export default function ClockPage() {
@@ -60,7 +53,7 @@ export default function ClockPage() {
   const [showClickHint, setShowClickHint] = useState(true);
 
   const { scheduleWave, isEnabled: audioEnabled, isReady: audioReady, enable, toggle: toggleAudio } =
-    useAudio(true, 0.6);
+    useAudio(true, 0.7);
 
   useEffect(() => {
     if (audioReady) setShowClickHint(false);
@@ -79,29 +72,31 @@ export default function ClockPage() {
   }, []);
 
   useEffect(() => {
-    // Align tick to the start of each second
+    // Align to the start of each second
     const msUntilNextSec = 1000 - (Date.now() % 1000);
     let interval: ReturnType<typeof setInterval>;
 
-    const timeout = setTimeout(() => {
+    const tick = () => {
       setRows(getClockRows());
-      if (audioEnabled) scheduleWave(CLOCK_CONFIG.cols, 0);
+    };
 
-      interval = setInterval(() => {
-        setRows(getClockRows());
-        if (audioEnabled) scheduleWave(CLOCK_CONFIG.cols, 0);
-      }, 1000);
+    const timeout = setTimeout(() => {
+      tick();
+      interval = setInterval(tick, 1000);
     }, msUntilNextSec);
 
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
     };
-  }, [audioEnabled, scheduleWave]);
+  }, []);
 
-  const handleWave = useCallback(() => {
-    if (audioEnabled) scheduleWave(CLOCK_CONFIG.cols, 0);
-  }, [audioEnabled, scheduleWave]);
+  const handleWave = useCallback(
+    (cols: number) => {
+      if (audioEnabled) scheduleWave(cols, CLOCK_CONFIG.waveDelay);
+    },
+    [audioEnabled, scheduleWave],
+  );
 
   return (
     <div
@@ -122,12 +117,9 @@ export default function ClockPage() {
         pointerEvents: 'none', zIndex: 50,
       }} />
 
-      <SplitFlapBoard
+      <ClockBoard
         targetRows={rows}
-        accentCols={[]}
         config={CLOCK_CONFIG}
-        feedName="CLOCK"
-        feedIcon="⏱"
         onWaveStart={handleWave}
       />
 
