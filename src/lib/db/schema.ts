@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS app_config (
   cols             INTEGER NOT NULL DEFAULT 32,
   rows             INTEGER NOT NULL DEFAULT 4,
   font_size        REAL    NOT NULL DEFAULT 1.0,
-  flip_speed       INTEGER NOT NULL DEFAULT 80,
+  flip_speed       INTEGER NOT NULL DEFAULT 150,
   wave_delay       INTEGER NOT NULL DEFAULT 40,
   audio_enabled    INTEGER NOT NULL DEFAULT 1,
   audio_volume     REAL    NOT NULL DEFAULT 0.7,

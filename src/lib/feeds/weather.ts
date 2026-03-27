@@ -66,7 +66,7 @@ export async function fetchWeather(
     rows: [row1, row2, row3],
     feedName: 'WEATHER',
     feedIcon: 'sun',
-    accentCols: [0],
+    accentCols: [],
     validUntil: Date.now() + 900_000,
     isRelevant: true,
   };

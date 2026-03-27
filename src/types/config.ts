@@ -160,7 +160,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   cols: 32,
   rows: 4,
   fontSize: 1.0,
-  flipSpeed: 80,
+  flipSpeed: 150,
   waveDelay: 40,
   audioEnabled: true,
   audioVolume: 0.7,

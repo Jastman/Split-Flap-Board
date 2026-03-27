@@ -140,7 +140,7 @@ export async function fetchISSPass(
         ],
         feedName: 'ISS PASS',
         feedIcon: '🚀',
-        accentCols: [0],
+        accentCols: [],
         validUntil: Date.now() + 3600_000,
         isRelevant: true,
       };
@@ -166,7 +166,7 @@ export async function fetchISSPass(
     ],
     feedName: 'ISS',
     feedIcon: '🚀',
-    accentCols: [0],
+    accentCols: [],
     validUntil: Date.now() + 60_000,
     isRelevant: true,
   };

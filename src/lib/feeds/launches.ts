@@ -61,7 +61,7 @@ export async function fetchLaunches(
     rows: [row1, row2, row3],
     feedName: 'LAUNCHES',
     feedIcon: 'rocket',
-    accentCols: [0],
+    accentCols: [],
     validUntil: Date.now() + 300_000,
     isRelevant: true,
   };

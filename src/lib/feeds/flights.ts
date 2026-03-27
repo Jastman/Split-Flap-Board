@@ -55,7 +55,7 @@ export async function fetchFlights(
       rows: [row1, row2, row3],
       feedName: 'FLIGHTS',
       feedIcon: '↑',
-      accentCols: [0],
+      accentCols: [],
       validUntil: Date.now() + 90_000,
       isRelevant: true,
     };

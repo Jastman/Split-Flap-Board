@@ -52,43 +52,46 @@ export function useAudio(initialEnabled = true, initialVolume = 0.7): UseAudioRe
   }, [resumeContext, initContext]);
 
   const synthesizeClick = useCallback((ctx: AudioContext, master: GainNode, time: number) => {
-    const bufferSize = Math.floor(ctx.sampleRate * 0.003);
+    // Classic split-flap "clack" — short burst of mid-range filtered noise
+    const bufferSize = Math.floor(ctx.sampleRate * 0.008);
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.8;
+      data[i] = (Math.random() * 2 - 1);
     }
 
     const noiseSource = ctx.createBufferSource();
     noiseSource.buffer = noiseBuffer;
 
+    // Mid-range bandpass — plastic card hitting a stop, not a typewriter
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.value = 2400;
-    filter.Q.value = 0.8;
+    filter.frequency.value = 900;
+    filter.Q.value = 1.8;
 
     const gainNode = ctx.createGain();
     gainNode.gain.setValueAtTime(0, time);
-    gainNode.gain.linearRampToValueAtTime(0.35, time + 0.001);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.025);
+    gainNode.gain.linearRampToValueAtTime(0.28, time + 0.002);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.055);
 
     noiseSource.connect(filter);
     filter.connect(gainNode);
     gainNode.connect(master);
     noiseSource.start(time);
-    noiseSource.stop(time + 0.030);
+    noiseSource.stop(time + 0.060);
 
-    // Low thump
+    // Soft mechanical thud — body resonance of the panel
     const thump = ctx.createOscillator();
     thump.type = 'sine';
-    thump.frequency.value = 120;
+    thump.frequency.setValueAtTime(180, time);
+    thump.frequency.exponentialRampToValueAtTime(80, time + 0.040);
     const thumpGain = ctx.createGain();
-    thumpGain.gain.setValueAtTime(0.15, time);
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, time + 0.015);
+    thumpGain.gain.setValueAtTime(0.12, time);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
     thump.connect(thumpGain);
     thumpGain.connect(master);
     thump.start(time);
-    thump.stop(time + 0.020);
+    thump.stop(time + 0.050);
   }, []);
 
   const scheduleWave = useCallback(
