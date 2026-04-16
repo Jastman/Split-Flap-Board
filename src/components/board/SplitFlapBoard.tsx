@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import FlapRow from './FlapRow';
 import type { AppConfig } from '@/types/config';
+import { DRUM_CHARS } from '@/types/board';
+import {
+  pickRandomPattern,
+  computeDelays,
+  maxDelay,
+  alignRows,
+  type AnimationPattern,
+} from '@/lib/animations';
 
 interface SplitFlapBoardProps {
   targetRows: string[];
@@ -24,6 +32,12 @@ export default function SplitFlapBoard({
   const [displayedRows, setDisplayedRows] = useState<string[]>(() =>
     Array.from({ length: config.rows }, () => ' '.repeat(config.cols)),
   );
+  const [scale, setScale] = useState(1);
+  // Current pattern delays — re-randomized each content change
+  const delaysRef = useRef<number[][]>(
+    Array.from({ length: config.rows }, () => new Array(config.cols).fill(0)),
+  );
+  const currentPatternRef = useRef<AnimationPattern>('wave-lr');
   const prevTargetRef = useRef<string[]>([]);
   const waveCalledRef = useRef(false);
   const [scale, setScale] = useState(1);
@@ -48,39 +62,72 @@ export default function SplitFlapBoard({
   }, [computeScale]);
 
   useEffect(() => {
+    computeScale();
+    window.addEventListener('resize', computeScale);
+    return () => window.removeEventListener('resize', computeScale);
+  }, [computeScale]);
+
+  // Detect content change → pick new random pattern, compute delays, trigger animation
+  useEffect(() => {
     const prev = prevTargetRef.current;
     const changed = targetRows.some((row, i) => row !== prev[i]);
     if (!changed) return;
 
-    // Trigger wave sound if rows changed
+    // Pick a new pattern from the configured pool (empty = all patterns)
+    const pool = config.animationPatterns?.length > 0
+      ? (config.animationPatterns as AnimationPattern[])
+      : undefined;
+    const pattern = pickRandomPattern(pool);
+    currentPatternRef.current = pattern;
+    delaysRef.current = computeDelays(pattern, config.rows, config.cols, config.waveDelay);
+
+    // Ghost-flip non-changing cells for Matrix animation
+    if (pattern === 'matrix') {
+      setGhostTrigger((n) => n + 1);
+    }
+
+    // Sound — play a simple left-to-right wave regardless of visual pattern
     if (onWaveStart && !waveCalledRef.current) {
       waveCalledRef.current = true;
       onWaveStart(config.cols);
       setTimeout(() => { waveCalledRef.current = false; }, 500);
     }
 
-    setDisplayedRows(prev.length > 0 ? [...prev] : Array.from({ length: config.rows }, () => ' '.repeat(config.cols)));
+    setDisplayedRows(
+      prev.length > 0
+        ? [...prev]
+        : Array.from({ length: config.rows }, () => ' '.repeat(config.cols)),
+    );
     prevTargetRef.current = targetRows;
-  }, [targetRows, config.cols, config.rows, onWaveStart]);
+  }, [targetRows, config.cols, config.rows, config.waveDelay, onWaveStart]);
 
-  // Sync displayedRows to targetRows after animation completes
+  // Sync-snap: after all cells finish animating, force displayedRows to target
   useEffect(() => {
+    const mDelay = maxDelay(delaysRef.current);
+    const snapDelay = mDelay + Math.ceil(DRUM_CHARS.length / 2) * config.flipSpeed + 300;
     const timer = setTimeout(() => {
-      setDisplayedRows(targetRows.map((row) => row.padEnd(config.cols, ' ').slice(0, config.cols)));
-    }, config.cols * config.waveDelay + SAFE_CHARS_MAX * config.flipSpeed + 200);
+      setDisplayedRows(
+        targetRows.map((row) => row.padEnd(config.cols, ' ').slice(0, config.cols)),
+      );
+    }, snapDelay);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetRows]);
 
-  const SAFE_CHARS_MAX = 54; // max drum steps in one flip cycle
+  // Apply alignment to the target rows for display
+  const alignedTarget = alignRows(
+    targetRows,
+    config.cols,
+    config.textHAlign ?? 'center',
+    config.textVAlign ?? 'top',
+    config.rows,
+  );
 
   const emptyRows = Array.from(
     { length: Math.max(0, config.rows - displayedRows.length) },
     () => ' '.repeat(config.cols),
   );
-
   const allCurrentRows = [...displayedRows, ...emptyRows].slice(0, config.rows);
-  const allTargetRows = targetRows.slice(0, config.rows);
 
   return (
     <div
@@ -103,12 +150,13 @@ export default function SplitFlapBoard({
         <FlapRow
           key={rowIdx}
           currentRow={currentRow}
-          targetRow={allTargetRows[rowIdx] ?? ' '.repeat(config.cols)}
+          targetRow={alignedTarget[rowIdx] ?? ' '.repeat(config.cols)}
           cols={config.cols}
           accentCols={rowIdx === 0 ? accentCols : []}
           config={config}
-          waveDelay={config.waveDelay}
+          cellDelays={delaysRef.current[rowIdx] ?? new Array(config.cols).fill(0)}
           onCellFlip={undefined}
+          ghostTrigger={currentPatternRef.current === 'matrix' ? ghostTrigger : undefined}
         />
       ))}
 

@@ -10,6 +10,9 @@ import { fetchMoon } from './moon';
 import { fetchWikipediaOnThisDay } from './wikipedia';
 import { fetchFlights } from './flights';
 import { fetchQuote } from './quotes';
+import { fetchSports } from './sports';
+import { fetchStocks } from './stocks';
+import { fetchCountdown } from './countdown';
 
 interface ScheduleSlot {
   id: number;
@@ -18,6 +21,8 @@ interface ScheduleSlot {
   message_id: number | null;
   duration: number;
   enabled: number;
+  start_hour: number | null;
+  end_hour: number | null;
 }
 
 interface MessageRow {
@@ -64,7 +69,36 @@ function getConfig(): AppConfig {
     cellHeight: (row.cell_height as string) ?? '4rem',
     presetId: (row.preset_id as string) ?? 'twa',
     rotationInterval: (row.rotation_interval as number) ?? 30,
+    textHAlign: ((row.text_h_align as string) ?? 'center') as AppConfig['textHAlign'],
+    textVAlign: ((row.text_v_align as string) ?? 'top') as AppConfig['textVAlign'],
+    animationPatterns: (() => {
+      try { return JSON.parse((row.animation_patterns as string) ?? '[]'); } catch { return []; }
+    })(),
   };
+}
+
+/** Returns true if the current hour (in local server time) is within [start, end). */
+function isWithinHours(
+  startHour: number | null,
+  endHour: number | null,
+  timezone: string,
+): boolean {
+  if (startHour === null || endHour === null) return true;
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    });
+    const currentHour = parseInt(formatter.format(new Date()), 10);
+    if (startHour <= endHour) {
+      return currentHour >= startHour && currentHour < endHour;
+    }
+    // Wraps midnight: e.g. start=22, end=6
+    return currentHour >= startHour || currentHour < endHour;
+  } catch {
+    return true;
+  }
 }
 
 async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<FeedResult | null> {
@@ -107,6 +141,24 @@ async function fetchFeedResult(feedRow: FeedRow, config: AppConfig): Promise<Fee
       case 'quotes': {
         const categories = (feedConfig.categories as string[]) ?? [];
         return fetchQuote(categories, cols);
+      }
+
+      case 'sports': {
+        const sport = (feedConfig.sport as string) ?? 'baseball';
+        const league = (feedConfig.league as string) ?? 'mlb';
+        return await fetchSports(sport, league, cols);
+      }
+
+      case 'stocks': {
+        const symbols = (feedConfig.symbols as string[]) ?? ['SPY', 'QQQ'];
+        return await fetchStocks(symbols, cols);
+      }
+
+      case 'countdown': {
+        const label = (feedConfig.label as string) ?? 'EVENT';
+        const targetDate = (feedConfig.targetDate as string) ?? '';
+        if (!targetDate) return null;
+        return fetchCountdown(label, targetDate, cols);
       }
 
       default:

@@ -7,7 +7,10 @@ export type FeedType =
   | 'moon'
   | 'wikipedia'
   | 'calendar'
-  | 'quotes';
+  | 'quotes'
+  | 'countdown'
+  | 'sports'
+  | 'stocks';
 
 export interface FeedConfig {
   id: string;

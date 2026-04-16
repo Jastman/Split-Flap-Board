@@ -20,6 +20,10 @@ export interface AppConfig {
   cellHeight: string;
   presetId: string;
   rotationInterval: number;
+  textHAlign: 'left' | 'center' | 'right' | 'justify';
+  textVAlign: 'top' | 'middle' | 'bottom';
+  /** Animation patterns enabled for random selection. Empty array = all patterns. */
+  animationPatterns: string[];
 }
 
 export interface BoardPreset {
@@ -160,7 +164,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   cols: 32,
   rows: 4,
   fontSize: 1.0,
-  flipSpeed: 80,
+  flipSpeed: 150,
   waveDelay: 40,
   audioEnabled: true,
   audioVolume: 0.7,
@@ -174,4 +178,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   cellHeight: '4rem',
   presetId: 'twa',
   rotationInterval: 30,
+  textHAlign: 'center',
+  textVAlign: 'top',
+  animationPatterns: [],
 };

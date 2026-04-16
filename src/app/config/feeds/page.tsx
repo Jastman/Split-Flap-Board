@@ -14,7 +14,7 @@ interface Feed {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.1em', display: 'block', marginBottom: '0.25rem' }}>
+    <label style={{ fontSize: '0.78rem', color: '#999', letterSpacing: '0.04em', display: 'block', marginBottom: '0.3rem', fontWeight: 500 }}>
       {children}
     </label>
   );
@@ -36,12 +36,12 @@ function Input({
       onChange={(e) => onChange(e.target.value)}
       style={{
         background: '#111',
-        border: '1px solid #333',
-        color: '#e5e5e5',
-        padding: '0.35rem 0.6rem',
-        borderRadius: '3px',
+        border: '1px solid #2e2e2e',
+        color: '#e0e0e0',
+        padding: '0.4rem 0.7rem',
+        borderRadius: '5px',
         fontFamily: 'monospace',
-        fontSize: '0.8rem',
+        fontSize: '0.875rem',
         width: '100%',
         boxSizing: 'border-box',
       }}
@@ -89,10 +89,10 @@ export default function FeedsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.15em', marginBottom: '0.25rem' }}>
-        DATA FEEDS
+      <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 0.4rem', color: '#fff', letterSpacing: '-0.01em' }}>
+        Data Feeds
       </h1>
-      <p style={{ color: '#555', fontSize: '0.75rem', marginBottom: '2rem' }}>
+      <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '2rem' }}>
         Configure live data sources. Timely feeds (ISS, launches, flights) only appear when relevant.
       </p>
 
@@ -116,10 +116,10 @@ export default function FeedsPage() {
                   flexShrink: 0,
                 }}
               />
-              <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em' }}>
+              <span style={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
                 {feed.label}
               </span>
-              <span style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '0.75rem', color: '#666', fontFamily: 'monospace' }}>
                 {feed.type}
               </span>
               <button
@@ -128,13 +128,11 @@ export default function FeedsPage() {
                 style={{
                   background: '#222',
                   border: '1px solid #333',
-                  color: '#777',
-                  padding: '0.2rem 0.5rem',
-                  borderRadius: '3px',
+                  color: '#999',
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: '4px',
                   cursor: 'pointer',
-                  fontSize: '0.65rem',
-                  fontFamily: 'monospace',
-                  letterSpacing: '0.08em',
+                  fontSize: '0.75rem',
                 }}
               >
                 {refreshing === feed.id ? '...' : 'REFRESH'}
@@ -145,13 +143,12 @@ export default function FeedsPage() {
                 style={{
                   background: feed.enabled ? '#e85d04' : '#222',
                   border: `1px solid ${feed.enabled ? '#e85d04' : '#333'}`,
-                  color: feed.enabled ? '#fff' : '#666',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '3px',
+                  color: feed.enabled ? '#fff' : '#888',
+                  padding: '0.25rem 0.7rem',
+                  borderRadius: '4px',
                   cursor: 'pointer',
-                  fontSize: '0.7rem',
-                  fontFamily: 'monospace',
-                  letterSpacing: '0.08em',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
                 }}
               >
                 {feed.enabled ? 'ON' : 'OFF'}
@@ -208,10 +205,91 @@ export default function FeedsPage() {
                     />
                   </div>
                 )}
+                {feed.type === 'sports' && (
+                  <>
+                    <div>
+                      <Label>SPORT</Label>
+                      <select
+                        value={(feed.config.sport as string) ?? 'baseball'}
+                        onChange={(e) => updateConfig(feed, 'sport', e.target.value)}
+                        style={{
+                          background: '#111', border: '1px solid #333', color: '#e5e5e5',
+                          padding: '0.35rem 0.6rem', borderRadius: '3px',
+                          fontFamily: 'monospace', fontSize: '0.8rem', width: '100%',
+                        }}
+                      >
+                        <option value="baseball">Baseball</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="football">Football</option>
+                        <option value="hockey">Hockey</option>
+                        <option value="soccer">Soccer</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>LEAGUE</Label>
+                      <select
+                        value={(feed.config.league as string) ?? 'mlb'}
+                        onChange={(e) => updateConfig(feed, 'league', e.target.value)}
+                        style={{
+                          background: '#111', border: '1px solid #333', color: '#e5e5e5',
+                          padding: '0.35rem 0.6rem', borderRadius: '3px',
+                          fontFamily: 'monospace', fontSize: '0.8rem', width: '100%',
+                        }}
+                      >
+                        <option value="mlb">MLB</option>
+                        <option value="nba">NBA</option>
+                        <option value="nfl">NFL</option>
+                        <option value="nhl">NHL</option>
+                        <option value="wnba">WNBA</option>
+                        <option value="mens-college-basketball">NCAA Basketball</option>
+                        <option value="college-football">NCAA Football</option>
+                        <option value="eng.1">Premier League</option>
+                        <option value="usa.1">MLS</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                {feed.type === 'stocks' && (
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <Label>SYMBOLS (COMMA-SEPARATED)</Label>
+                    <Input
+                      value={((feed.config.symbols as string[]) ?? []).join(', ')}
+                      onChange={(v) =>
+                        updateConfig(
+                          feed,
+                          'symbols',
+                          v.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
+                        )
+                      }
+                    />
+                    <span style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace' }}>
+                      e.g. SPY, QQQ, AAPL, TSLA
+                    </span>
+                  </div>
+                )}
+                {feed.type === 'countdown' && (
+                  <>
+                    <div>
+                      <Label>EVENT LABEL</Label>
+                      <Input
+                        value={(feed.config.label as string) ?? ''}
+                        onChange={(v) => updateConfig(feed, 'label', v.toUpperCase())}
+                      />
+                    </div>
+                    <div>
+                      <Label>TARGET DATE/TIME (LOCAL)</Label>
+                      <Input
+                        type="datetime-local"
+                        value={(feed.config.targetDate as string) ?? ''}
+                        onChange={(v) => updateConfig(feed, 'targetDate', v)}
+                      />
+                    </div>
+                  </>
+                )}
                 {feed.error && (
                   <div style={{ gridColumn: '1/-1' }}>
-                    <span style={{ fontSize: '0.7rem', color: '#cc4444', fontFamily: 'monospace' }}>
-                      ERROR: {feed.error}
+                    <span style={{ fontSize: '0.8rem', color: '#f87171', fontFamily: 'monospace' }}>
+                      Error: {feed.error}
                     </span>
                   </div>
                 )}
